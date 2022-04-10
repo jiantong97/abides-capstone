@@ -3,7 +3,8 @@ from agent.ExchangeAgent import ExchangeAgent
 from agent.examples.QLearningAgent import QLearningAgent
 from agent.ZeroIntelligenceAgent import ZeroIntelligenceAgent
 from util.order import LimitOrder
-from util.oracle.SparseMeanRevertingOracle import SparseMeanRevertingOracle
+from util.oracle.ExternalFileOracle import ExternalFileOracle
+# from util.oracle.SparseMeanRevertingOracle import SparseMeanRevertingOracle
 from util import util
 from util.model.QTable import QTable
 
@@ -37,14 +38,17 @@ num_consecutive_simulations = 50
 # Thus our discrete time stamps are effectively nanoseconds, although
 # they can be interepreted otherwise for ahistorical (e.g. generated)
 # simulations.  These timestamps do require a valid date component.
-midnight = pd.to_datetime('2014-01-28')
+historical_date = pd.to_datetime(args.historical_date)
+mkt_open = historical_date + pd.to_timedelta('09:30:00')
+mkt_close = historical_date + pd.to_timedelta('16:00:00')
 
 
 ### STOCK SYMBOL CONFIGURATION.
-symbols = { 'IBM' : { 'r_bar' : 1e5, 'kappa' : 1.67e-12, 'agent_kappa' : 1.67e-15,
-                      'sigma_s' : 0, 'fund_vol' : 1e-8, 'megashock_lambda_a' : 2.77778e-13,
-                      'megashock_mean' : 1e3, 'megashock_var' : 5e4 }
-          }
+# symbols = { 'IBM' : { 'r_bar' : 1e5, 'kappa' : 1.67e-12, 'agent_kappa' : 1.67e-15,
+#                       'sigma_s' : 0, 'fund_vol' : 1e-8, 'megashock_lambda_a' : 2.77778e-13,
+#                       'megashock_mean' : 1e3, 'megashock_var' : 5e4 }
+#           }
+symbol = args.ticker
 
 
 ### INITIAL AGENT DISTRIBUTION.
@@ -65,8 +69,6 @@ num_qlearners = 1
 
 
 ### EXCHANGE AGENTS
-mkt_open = midnight + pd.to_timedelta('09:30:00')
-mkt_close = midnight + pd.to_timedelta('16:00:00')
 
 ### Record the type and strategy of the agents for reporting purposes.
 for i in range(num_exch):
@@ -139,6 +141,18 @@ parser.add_argument('-b', '--book_freq', default=None,
                     help='Frequency at which to archive order book for visualization')
 parser.add_argument('-c', '--config', required=True,
                     help='Name of config file to execute')
+parser.add_argument('-t',
+                    '--ticker',
+                    required=True,
+                    help='Ticker (symbol) to use for simulation')
+parser.add_argument('-d', '--historical-date',
+                    required=True,
+                    type=parse,
+                    help='historical date being simulated in format YYYYMMDD.')
+parser.add_argument('-f',
+                    '--fundamental-file-path',
+                    required=True,
+                    help="Path to external fundamental file.")
 parser.add_argument('-l', '--log_dir', default=None,
                     help='Log directory name (default: unix timestamp at program start)')
 parser.add_argument('-o', '--log_orders', action='store_true',
@@ -264,8 +278,8 @@ noise = [ 0.25, 0.25, 0.20, 0.15, 0.10, 0.05 ]
 # of simulated time, and should generally be a superset of "market hours".
 # There is no requirement these times be on the same date, although
 # none of the current agents handle markets closing and reopening.
-kernelStartTime = midnight
-kernelStopTime = midnight + pd.to_timedelta('17:00:00')
+kernelStartTime = historical_date
+kernelStopTime = historical_date + pd.to_timedelta('17:00:00')
 
 # This will configure the kernel with a default computation delay
 # (time penalty) for each agent's wakeup and recvMsg.  An agent
@@ -298,8 +312,20 @@ for sim in range(num_consecutive_simulations):   # eventually make this a stoppi
   # All agents requiring the same type of Oracle will use the same oracle instance.
   # The oracle does not require its own source of randomness, because each symbol
   # and agent has those, and the oracle will always use on of those sources, as appropriate.
-  oracle = SparseMeanRevertingOracle(mkt_open, mkt_close, symbols)
+  # oracle = SparseMeanRevertingOracle(mkt_open, mkt_close, symbols)
+  # Oracle
+  symbols = {
+      symbol: {
+          'fundamental_file_path': args.fundamental_file_path,
+          'random_state': np.random.RandomState(seed=np.random.randint(low=0, high=2 ** 32, dtype='uint64'))
+      }
+  }
+  oracle = ExternalFileOracle(symbols)
 
+  r_bar = oracle.fundamentals[symbol].values[0]
+  sigma_n = r_bar / 10
+  kappa = 1.67e-15
+  lambda_a = 1e-12
 
   # Create the agents in the same order they were specified in the first configuration
   # section (outside the simulation loop).  It is very important they be in the same
@@ -320,7 +346,7 @@ for sim in range(num_consecutive_simulations):   # eventually make this a stoppi
 
   # Configure some zero intelligence agents.
   starting_cash = 10000000       # Cash in this simulator is always in CENTS.
-  symbol = 'IBM'
+  symbol = args.ticker
   s = symbols[symbol]
 
   # ZI strategy split.  Note that agent arrival rates are quite small, because our minimum
