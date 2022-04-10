@@ -216,7 +216,19 @@ print ("Logging orders: {}".format(log_orders))
 print ("Book freq: {}".format(book_freq))
 print ("Configuration seed: {}\n".format(seed))
 
+# Oracle
+symbols = {
+    symbol: {
+        'fundamental_file_path': args.fundamental_file_path,
+        'random_state': np.random.RandomState(seed=np.random.randint(low=0, high=2 ** 32, dtype='uint64'))
+    }
+}
+oracle = ExternalFileOracle(symbols)
 
+r_bar = oracle.fundamentals[symbol].values[0]
+sigma_n = r_bar / 10
+kappa = 1.67e-15
+lambda_a = 1e-12
 
 ### STOCHASTIC CONTROL
 
@@ -316,19 +328,7 @@ for sim in range(num_consecutive_simulations):   # eventually make this a stoppi
   # The oracle does not require its own source of randomness, because each symbol
   # and agent has those, and the oracle will always use on of those sources, as appropriate.
   # oracle = SparseMeanRevertingOracle(mkt_open, mkt_close, symbols)
-  # Oracle
-  symbols = {
-      symbol: {
-          'fundamental_file_path': args.fundamental_file_path,
-          'random_state': np.random.RandomState(seed=np.random.randint(low=0, high=2 ** 32, dtype='uint64'))
-      }
-  }
-  oracle = ExternalFileOracle(symbols)
 
-  r_bar = oracle.fundamentals[symbol].values[0]
-  sigma_n = r_bar / 10
-  kappa = 1.67e-15
-  lambda_a = 1e-12
 
   # Create the agents in the same order they were specified in the first configuration
   # section (outside the simulation loop).  It is very important they be in the same
