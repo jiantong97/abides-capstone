@@ -7,6 +7,7 @@ from util.oracle.ExternalFileOracle import ExternalFileOracle
 # from util.oracle.SparseMeanRevertingOracle import SparseMeanRevertingOracle
 from util import util
 from util.model.QTable import QTable
+from dateutil.parser import parse
 
 import numpy as np
 import pandas as pd
