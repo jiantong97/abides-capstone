@@ -17,7 +17,7 @@ def save_mid_price(orderbook_file_path, output_dir):
     orderbook_df = pd.read_pickle(orderbook_file_path)
 
     # Compute mid price and associate to timestamp
-    mid_price = (orderbook_df['ask_price_1'] + orderbook_df_df['bid_price_1']) / 2
+    mid_price = (orderbook_df['ask_price_1'] + orderbook_df['bid_price_1']) / 2
     if not is_wide_book(orderbook_df):
         mid_price.index = orderbook_df.index.levels[0]
     else:
