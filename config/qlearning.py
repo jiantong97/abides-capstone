@@ -14,6 +14,46 @@ import sys
 
 from math import ceil, floor
 
+# We allow some high-level parameters to be specified on the command line at
+# runtime, rather than being explicitly coded in the config file.  This really
+# only makes sense for parameters that affect the entire series of simulations
+# (i.e. the entire "experiment"), rather than a single instance of the simulation.
+import argparse
+
+parser = argparse.ArgumentParser(description='Detailed options for sparse_zi config.')
+parser.add_argument('-b', '--book_freq', default=None,
+                    help='Frequency at which to archive order book for visualization')
+parser.add_argument('-c', '--config', required=True,
+                    help='Name of config file to execute')
+parser.add_argument('-t',
+                    '--ticker',
+                    required=True,
+                    help='Ticker (symbol) to use for simulation')
+parser.add_argument('-d', '--historical-date',
+                    required=True,
+                    type=parse,
+                    help='historical date being simulated in format YYYYMMDD.')
+parser.add_argument('-f',
+                    '--fundamental-file-path',
+                    required=True,
+                    help="Path to external fundamental file.")
+parser.add_argument('-l', '--log_dir', default=None,
+                    help='Log directory name (default: unix timestamp at program start)')
+parser.add_argument('-o', '--log_orders', action='store_true',
+                    help='Log every order-related action by every agent.')
+parser.add_argument('-s', '--seed', type=int, default=None,
+                    help='numpy.random.seed() for simulation')
+parser.add_argument('-v', '--verbose', action='store_true',
+                    help='Maximum verbosity!')
+parser.add_argument('--config_help', action='store_true',
+                    help='Print argument options for this config file')
+
+args, remaining_args = parser.parse_known_args()
+
+if args.config_help:
+  parser.print_help()
+  sys.exit()
+
 ###### Helper functions for this configuration file.  Just commonly-used code ######
 ###### that would otherwise have been repeated many times.                    ######
 
@@ -130,45 +170,7 @@ agent_saved_states['agent_state'] = [None] * num_agents
 
 ### SIMULATION CONTROL SETTINGS.
 
-# We allow some high-level parameters to be specified on the command line at
-# runtime, rather than being explicitly coded in the config file.  This really
-# only makes sense for parameters that affect the entire series of simulations
-# (i.e. the entire "experiment"), rather than a single instance of the simulation.
-import argparse
 
-parser = argparse.ArgumentParser(description='Detailed options for sparse_zi config.')
-parser.add_argument('-b', '--book_freq', default=None,
-                    help='Frequency at which to archive order book for visualization')
-parser.add_argument('-c', '--config', required=True,
-                    help='Name of config file to execute')
-parser.add_argument('-t',
-                    '--ticker',
-                    required=True,
-                    help='Ticker (symbol) to use for simulation')
-parser.add_argument('-d', '--historical-date',
-                    required=True,
-                    type=parse,
-                    help='historical date being simulated in format YYYYMMDD.')
-parser.add_argument('-f',
-                    '--fundamental-file-path',
-                    required=True,
-                    help="Path to external fundamental file.")
-parser.add_argument('-l', '--log_dir', default=None,
-                    help='Log directory name (default: unix timestamp at program start)')
-parser.add_argument('-o', '--log_orders', action='store_true',
-                    help='Log every order-related action by every agent.')
-parser.add_argument('-s', '--seed', type=int, default=None,
-                    help='numpy.random.seed() for simulation')
-parser.add_argument('-v', '--verbose', action='store_true',
-                    help='Maximum verbosity!')
-parser.add_argument('--config_help', action='store_true',
-                    help='Print argument options for this config file')
-
-args, remaining_args = parser.parse_known_args()
-
-if args.config_help:
-  parser.print_help()
-  sys.exit()
 
 
 # If nothing specifically requested, use starting timestamp.  In either case, successive
