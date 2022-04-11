@@ -102,6 +102,8 @@ class QLearningAgent(TradingAgent):
     # Compute the order imbalance feature.
     bid_vol = sum([ v[1] for v in self.known_bids[self.symbol] ])
     ask_vol = sum([ v[1] for v in self.known_asks[self.symbol] ])
+    bid = mean([ v[0] for v in self.known_bids[self.symbol] ])
+    ask = mean([ v[0] for v in self.known_asks[self.symbol] ])
     imba = bid_vol - ask_vol
 
     # A unit of stock is now 100 shares instead of one.
@@ -167,8 +169,8 @@ class QLearningAgent(TradingAgent):
     # Place the order.  We probably want this to be a market order, once supported,
     # or use a "compute required price for guaranteed execution" function like the
     # impact agent, but that requires fetching quite a bit of book depth.
-    if a == 0:   self.placeLimitOrder(self.symbol, 1, False, 50000)
-    elif a == 2: self.placeLimitOrder(self.symbol, 1, True, 200000)
+    if a == 0:   self.placeLimitOrder(self.symbol, 1, False, ask)
+    elif a == 2: self.placeLimitOrder(self.symbol, 1, True, bid)
 
 
   def receiveMessage (self, currentTime, msg):
