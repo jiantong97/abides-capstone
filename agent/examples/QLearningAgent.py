@@ -169,8 +169,8 @@ class QLearningAgent(TradingAgent):
     # Place the order.  We probably want this to be a market order, once supported,
     # or use a "compute required price for guaranteed execution" function like the
     # impact agent, but that requires fetching quite a bit of book depth.
-    if a == 0:   self.placeLimitOrder(self.symbol, 1, False, ask)
-    elif a == 2: self.placeLimitOrder(self.symbol, 1, True, bid)
+    if a == 0:   self.placeLimitOrder(self.symbol, 1, False, ask - 500)
+    elif a == 2: self.placeLimitOrder(self.symbol, 1, True, bid + 500)
 
 
   def receiveMessage (self, currentTime, msg):
