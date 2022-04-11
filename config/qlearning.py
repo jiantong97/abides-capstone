@@ -358,7 +358,7 @@ for sim in range(num_consecutive_simulations):   # eventually make this a stoppi
   for n, x in zip(zi, zi_strategy):
     strat_name = agent_strats[agent_id]
     while n > 0:
-      agents.append(ZeroIntelligenceAgent(agent_id, "ZI Agent {}".format(agent_id), strat_name, random_state = get_rand_obj(agent_seeds[agent_id]), log_orders=log_orders, symbol=symbol, starting_cash=starting_cash, sigma_n=zi_obs_noise, r_bar=r_bar, kappa=s['agent_kappa'], sigma_s=s['fund_vol'], q_max=10, sigma_pv=5e6, R_min=x[0], R_max=x[1], eta=x[2], lambda_a=1e-12))
+      agents.append(ZeroIntelligenceAgent(agent_id, "ZI Agent {}".format(agent_id), strat_name, random_state = get_rand_obj(agent_seeds[agent_id]), log_orders=log_orders, symbol=symbol, starting_cash=starting_cash, sigma_n=zi_obs_noise, r_bar=r_bar, kappa=kappa, sigma_s=1e-8, q_max=10, sigma_pv=5e6, R_min=x[0], R_max=x[1], eta=x[2], lambda_a=1e-12))
       agent_id += 1
       n -= 1
 
